@@ -1,13 +1,16 @@
 """
 SUMMARY:
     To be used in conjunction with FormatCSV.py.  Resets my testing environment.
+
 Requires the following files:
   - .testFiles/testDoc_template.csv
+
 Resets the test environment, which for now means it:
   - deletes the test document (testDoc.csv)
   - deletes any edited documents (testDoc_edited.csv)
   - deletes any log files (testDoc_log.csv)
   - creates a new version of the test document (copies and renamed testDoc - template.csv)
+
 VERSION INFO:
     Created by R. Reyna
     Date: 2024-07-22
@@ -41,4 +44,5 @@ for file in filesToRemove:
 # create new test environment - copy/rename file
 #shutil.copyfile(filename_template, filename_orig)
 shutil.copyfile(absFilePath_template, absFilePath_orig)
+
 
