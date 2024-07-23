@@ -15,19 +15,22 @@ RETURNS:
 
 NOTES:
     csv module info: https://docs.python.org/3/library/csv.html#module-csv
+    logging info: https://docs.python.org/3/library/logging.html
 
 VERSION INFO:
     Created by R. Reyna
-    Date: 2024-07-19
+    Date: 2024-07-23
     Version: 1.1
     Changes:
         - File names and paths are no longer hardcoded - interact with user to get this information.
         - Fixed some misplaced comments
+        - Added very simple implementation of INFO logging, to use must uncomment logging.basicConfig() code
 """
 # import modules
 import csv
 from datetime import datetime  # used in log file
 import os
+import logging
 
 
 def get_formatted_datetime():
@@ -45,7 +48,7 @@ attr_lastname = "Last Name"
 attr_birthday = "Birthday"
 attr_anniversary = "Home Anniversary"
 attr_address1 = "Address line 1"
-attr_address2 = "Address line 2"
+attr_address2 = "Address line 2"  # not required, this is usually something like 'Unit 3'
 attr_city = "City"
 attr_state = "State"
 attr_country = "Country"
@@ -53,7 +56,7 @@ attr_zip = "Zip code"
 attrdict = (attr_firstname, attr_lastname, attr_birthday, attr_anniversary,
                  attr_address1, attr_address2, attr_city, attr_state,
                  attr_zip, attr_country)
-attrdict_required = (attr_firstname, attr_lastname, attr_address1, attr_address2,
+attrdict_required = (attr_firstname, attr_lastname, attr_address1,
                      attr_city, attr_state, attr_zip, attr_country)  # these are required to matter what
 attrdict_eitherOr = (attr_birthday, attr_anniversary)  # contacts need AT LEAST one of these, but don't need both
 
@@ -127,15 +130,19 @@ absFilePath_orig = dir_src + '/' + filename_orig
 absFilePath_edited = dir_save + '/' + filename_edited
 absFilePath_log = dir_save + '/' + filename_log
 
+# logging
+logger = logging.getLogger(__name__)
+logging.basicConfig(filename=absFilePath_log) # , level=logging.INFO)  # COMMENT OUT 'level' when not testing
+
 print("START: Running text file manipulation script...")
 print(f"Original file used: {absFilePath_orig}")
 print(f"Edited file produced: {absFilePath_edited}")
 
 with open(absFilePath_log, "w") as f:
-    f.write(f"START file conversion process {get_formatted_datetime()}")
-    f.write(f"\nOriginal script: {absFilePath_orig}")
-    f.write(f"\nEdited script: {absFilePath_edited}")
-    f.write(f"\n---------------------------------------------------------------------------------------------------")
+    f.write(f"START file conversion process {get_formatted_datetime()}\n")
+    f.write(f"Original script: {absFilePath_orig}\n")
+    f.write(f"Edited script: {absFilePath_edited}\n")
+    f.write(f"---------------------------------------------------------------------------------------------------\n")
 
 # STEP 1: remove the first row - this is a first level category which we want to ignore
 with open(absFilePath_orig, "r") as f:
@@ -169,15 +176,18 @@ with open(absFilePath_orig, newline='') as csvfile:
         for attr in attrdict_required:
             if not row[attr]:
                 formatBOOL = False
+                logger.info(f"SKIPPING CONTACT: Missing {attr} - {row}")
 
         if formatBOOL:  # has all the req attributes, continue to 'either or' - only one is needed
             checkDateBOOL = False  # start false, will turn true if any of the 'either or' attrs are found
             for attr in attrdict_eitherOr:
                 if row[attr]:
                     checkDateBOOL = True
+                    logger.info(f"FORMATTING CONTACT: At least one date found ({attr}) - {row}")
 
             if not checkDateBOOL:
                 formatBOOL = False
+                logger.info(f"SKIPPING CONTACT: No dates found - {row}")
 
         # write the csv values to the new file
         with open(absFilePath_edited, 'a') as f:
@@ -202,13 +212,13 @@ with open(absFilePath_orig, newline='') as csvfile:
 
 # STEP 4: update log file with results
 with open(absFilePath_log, "a") as f:
-    f.write(f"\nTotal number of original contacts: {num_contacts_orig}")
-    f.write(f"\nNumber of contacts skipped (see below for list): {num_contacts_skipped}")
-    f.write(f"\nNumber of contacts formatted (see below for list): {num_contacts_formatted}")
-    f.write(f"\n---------------------------------------------------------------------------------------------------")
-    f.write("\n--SKIPPED CONTACTS")
-    f.write(f"\n{contacts_skipped}")
-    f.write("\n--FORMATTED CONTACTS")
-    f.write(f"\n{contacts_formatted}")
-    f.write(f"\n---------------------------------------------------------------------------------------------------")
-    f.write(f"\nEND file conversion process {get_formatted_datetime()}")
+    f.write(f"Total number of original contacts: {num_contacts_orig}\n")
+    f.write(f"Number of contacts skipped (see below for list): {num_contacts_skipped}\n")
+    f.write(f"Number of contacts formatted (see below for list): {num_contacts_formatted}\n")
+    f.write(f"---------------------------------------------------------------------------------------------------\n")
+    f.write("--SKIPPED CONTACTS\n")
+    f.write(f"{contacts_skipped}\n")
+    f.write("--FORMATTED CONTACTS\n")
+    f.write(f"{contacts_formatted}\n")
+    f.write(f"---------------------------------------------------------------------------------------------------\n")
+    f.write(f"END file conversion process {get_formatted_datetime()}\n")
